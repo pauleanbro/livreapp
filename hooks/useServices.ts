@@ -1,15 +1,15 @@
-import { LegalDocumentsService, legalDocumentsService } from "@/services/legalDocuments.service";
+import { authService, AuthService } from "@/services/auth.service";
 
 export enum EServices {
-  LegalDocumentsService = "LegalDocumentsService",
+  AuthService = "AuthService",
 }
 
 interface TServices {
-  [EServices.LegalDocumentsService]: LegalDocumentsService;
+  [EServices.AuthService]: AuthService;
 }
 
 const servicesMap: { [K in EServices]: TServices[K] } = {
-  [EServices.LegalDocumentsService]: legalDocumentsService,
+  [EServices.AuthService]: authService,
 };
 
 export const useServices = <T extends EServices>(service: T): TServices[T] => {

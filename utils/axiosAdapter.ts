@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { envs, IEnvs } from "@/constants/envs";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 export interface AxiosAdapter {
   get<T = any>(url: string, config?: any): Promise<T>;
@@ -16,6 +16,18 @@ class AxiosAdapterImpl implements AxiosAdapter {
   constructor(envs: IEnvs) {
     this.axios = axios.create({
       baseURL: envs.API_URL,
+    });
+
+    console.log("[AxiosAdapter] Base URL:", envs.API_URL);
+
+    this.axios.interceptors.request.use((config) => {
+      console.log("[HTTP Request]", {
+        method: config.method,
+        baseURL: config.baseURL,
+        url: config.url,
+        data: config.data,
+      });
+      return config;
     });
 
     this.axios.interceptors.response.use(...this.interceptorsResponse());
@@ -54,6 +66,8 @@ class AxiosAdapterImpl implements AxiosAdapter {
       (response: AxiosResponse) => response,
       (error: any) => {
         console.error("[HTTP Error]", {
+          method: error?.config?.method,
+          baseURL: error?.config?.baseURL,
           url: error?.config?.url,
           status: error.response?.status,
           data: error.response?.data,
