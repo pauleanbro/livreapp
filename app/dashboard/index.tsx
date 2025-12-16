@@ -3,8 +3,8 @@ import React from "react";
 import styled from "styled-components/native";
 
 import { EServices, useServices } from "@/hooks/useServices";
-import { Body, Content, Screen, Title , ThemedProps } from "@/styles/shared";
 import { useAuthStore } from "@/stores/authStore";
+import { Body, Content, Screen, ThemedProps, Title } from "@/styles/shared";
 
 export default function Dashboard() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 import { envs, IEnvs } from "@/constants/envs";
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { handleApiError } from "@/utils/handleApiError";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 export interface AxiosAdapter {
   get<T = any>(url: string, config?: any): Promise<T>;

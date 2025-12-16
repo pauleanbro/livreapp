@@ -4,25 +4,25 @@ import { Controller, useForm } from "react-hook-form";
 import { ScrollView } from "react-native";
 
 import {
-  ButtonText,
-  ErrorBanner,
-  ErrorText,
-  InfoBanner,
-  GhostButton,
-  GhostText,
-  Input,
-  PrimaryButton,
-  SecondaryButton,
-  Spacer,
-  ToggleRow,
-  Checkbox,
+    ButtonText,
+    Checkbox,
+    ErrorBanner,
+    ErrorText,
+    GhostButton,
+    GhostText,
+    InfoBanner,
+    Input,
+    PrimaryButton,
+    SecondaryButton,
+    Spacer,
+    ToggleRow,
 } from "@/components/ui/controls";
 import { digitOnly } from "./shared/utils";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import {
-  CompanyVerificationPayload,
-  CompanyVerificationResponse,
+    CompanyVerificationPayload,
+    CompanyVerificationResponse,
 } from "@/services/onboarding.service";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";

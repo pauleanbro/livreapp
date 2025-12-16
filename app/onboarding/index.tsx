@@ -5,23 +5,23 @@ import { Controller, useForm } from "react-hook-form";
 import { Platform, ScrollView } from "react-native";
 
 import {
-  ButtonText,
-  ErrorBanner,
-  ErrorText,
-  GhostButton,
-  GhostText,
-  InfoBanner,
-  Input,
-  PrimaryButton,
-  Spacer,
+    ButtonText,
+    ErrorBanner,
+    ErrorText,
+    GhostButton,
+    GhostText,
+    InfoBanner,
+    Input,
+    PrimaryButton,
+    Spacer,
 } from "@/components/ui/controls";
 import {
-  digitOnly,
-  formatBirthdate,
-  formatCPF,
-  formatDateFromDate,
-  formatPhone,
-  isValidDate,
+    digitOnly,
+    formatBirthdate,
+    formatCPF,
+    formatDateFromDate,
+    formatPhone,
+    isValidDate,
 } from "./shared/utils";
 
 import { EServices, useServices } from "@/hooks/useServices";

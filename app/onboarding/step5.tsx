@@ -3,15 +3,15 @@ import React, { useState } from "react";
 import { ScrollView } from "react-native";
 
 import {
-  ButtonText,
-  Checkbox,
-  ErrorBanner,
-  GhostButton,
-  GhostText,
-  InfoBanner,
-  PrimaryButton,
-  Spacer,
-  ToggleRow,
+    ButtonText,
+    Checkbox,
+    ErrorBanner,
+    GhostButton,
+    GhostText,
+    InfoBanner,
+    PrimaryButton,
+    Spacer,
+    ToggleRow,
 } from "@/components/ui/controls";
 
 import { EServices, useServices } from "@/hooks/useServices";

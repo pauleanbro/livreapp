@@ -3,14 +3,14 @@ import React, { useEffect, useState } from "react";
 import { ScrollView } from "react-native";
 
 import {
-  ButtonText,
-  ErrorBanner,
-  InfoBanner,
-  GhostButton,
-  GhostText,
-  PrimaryButton,
-  SecondaryButton,
-  Spacer,
+    ButtonText,
+    ErrorBanner,
+    GhostButton,
+    GhostText,
+    InfoBanner,
+    PrimaryButton,
+    SecondaryButton,
+    Spacer,
 } from "@/components/ui/controls";
 import { birthdateToISO, digitOnly } from "./shared/utils";
 
