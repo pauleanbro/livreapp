@@ -1,92 +1,156 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { TextInputProps } from "react-native";
-import styled from "styled-components/native";
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  BackgroundView,
+  Bottom,
+  CheckboxRow,
+  ContentView,
+  Form,
+  FormGroup,
+  Link,
+  LinkText,
+  Middle,
+  Support,
+  SupportText,
+  TitleLarge,
+} from "./styles";
 
+import {
+  ButtonText,
+  Checkbox as CheckboxControl,
+  PrimaryButton,
+  Input as TextInputControl,
+} from "@/components/ui/controls";
 import { EServices, useServices } from "@/hooks/useServices";
 import { useAuthStore } from "@/stores/authStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";
+import { Screen } from "@/styles/shared";
+
+type LoginFormProps = {
+  username: string;
+  password: string;
+  remember?: boolean;
+};
 
 export default function Auth() {
   const router = useRouter();
   const authService = useServices(EServices.AuthService);
   const setAuth = useAuthStore((state) => state.setAuth);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setError(null);
-    setLoading(true);
+  const { control, handleSubmit } = useForm<LoginFormProps>({
+    defaultValues: { username: "", password: "", remember: false },
+  });
+
+  const onSubmit = async (data: LoginFormProps) => {
     try {
-      console.log("Dados de login enviados:", { username, password });
-      const res = await authService.login({ username, password });
-      setAuth({ accessToken: res.access_token, role: res.role, permissions: res.permissions });
+      const res = await authService.login({
+        username: data.username,
+        password: data.password,
+      });
+      setAuth({
+        accessToken: res.access_token,
+        role: res.role,
+        permissions: res.permissions,
+      });
       router.replace("/dashboard");
     } catch (err) {
-      setError("Falha no login. Verifique suas credenciais.");
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <Screen>
-      <Content>
-        <Card>
-          <Title>Auth Screen</Title>
-          <Body>Construa sua autenticação aqui.</Body>
-          <Spacer />
-          <Input
-            placeholder="Email ou usuário"
-            autoCapitalize="none"
-            value={username}
-            onChangeText={setUsername}
-          />
-          <Input
-            placeholder="Senha"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-          {error ? <ErrorText>{error}</ErrorText> : null}
-          <Button disabled={loading} onPress={handleLogin}>
-            <ButtonText>{loading ? "Entrando..." : "Entrar"}</ButtonText>
-          </Button>
-        </Card>
-      </Content>
+      <BackgroundView>
+        <KeyboardAvoidingView
+          style={{ flex: 1, width: "100%" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+            <ContentView style={{ paddingBottom: insets.bottom }}>
+              <Middle>
+                <TitleLarge>Sua conta</TitleLarge>
+                <Form>
+                  <FormGroup>
+                    <Controller
+                      control={control}
+                      name="username"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInputControl
+                          label="E-mail"
+                          labelStyle={{ color: "#EEFFEF" }}
+                          value={value}
+                          onChangeText={onChange}
+                          inputStyle={{
+                            borderColor: "#EEFFEF",
+                            color: "#EEFFEF",
+                          }}
+                        />
+                      )}
+                    />
+
+                    <Controller
+                      control={control}
+                      name="password"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInputControl
+                          label="Senha"
+                          labelStyle={{ color: "#EEFFEF" }}
+                          secureTextEntry
+                          value={value}
+                          onChangeText={onChange}
+                          inputStyle={{
+                            borderColor: "#EEFFEF",
+                            color: "#EEFFEF",
+                          }}
+                        />
+                      )}
+                    />
+
+                    <CheckboxRow>
+                      <Controller
+                        control={control}
+                        name="remember"
+                        render={({ field: { value, onChange } }) => (
+                          <CheckboxControl
+                            labelStyle={{ color: "#EEFFEF" }}
+                            label="Salvar dados de login para novos acessos"
+                            value={!!value}
+                            onValueChange={onChange}
+                          />
+                        )}
+                      />
+                    </CheckboxRow>
+                  </FormGroup>
+                </Form>
+              </Middle>
+
+              <Bottom>
+                <Support>
+                  <SupportText>Problemas para fazer login?</SupportText>
+                  <Link onPress={() => {}}>
+                    <LinkText>Clique para recuperar seu acesso</LinkText>
+                  </Link>
+                </Support>
+
+                <PrimaryButton onPress={handleSubmit(onSubmit as any)}>
+                  <ButtonText>Entrar</ButtonText>
+                </PrimaryButton>
+              </Bottom>
+            </ContentView>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </BackgroundView>
     </Screen>
   );
 }
 
-const Input = styled.TextInput<TextInputProps>`
-  border-width: 1px;
-  border-color: ${({ theme }: ThemedProps) => theme.colors.border};
-  color: ${({ theme }: ThemedProps) => theme.colors.text};
-  padding: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-  border-radius: ${({ theme }: ThemedProps) => theme.radius.sm}px;
-  margin-bottom: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;
-
-const Button = styled.TouchableOpacity`
-  background-color: ${({ theme }: ThemedProps) => theme.colors.primary};
-  padding: ${({ theme }: ThemedProps) => theme.spacing(1.5)}px;
-  border-radius: ${({ theme }: ThemedProps) => theme.radius.sm}px;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ButtonText = styled.Text`
-  color: ${({ theme }: ThemedProps) => theme.colors.text};
-  font-weight: 700;
-`;
-
-const ErrorText = styled.Text`
-  color: red;
-  margin-bottom: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;
-
-const Spacer = styled.View`
-  height: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;
+// styles moved to ./styles.ts

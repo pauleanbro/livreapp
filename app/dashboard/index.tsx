@@ -3,8 +3,7 @@ import React from "react";
 import styled from "styled-components/native";
 
 import { EServices, useServices } from "@/hooks/useServices";
-import { Body, Content, Screen, Title } from "@/styles/shared";
-import { ThemedProps } from "@/styles/shared";
+import { Body, Content, Screen, Title , ThemedProps } from "@/styles/shared";
 import { useAuthStore } from "@/stores/authStore";
 
 export default function Dashboard() {
@@ -45,6 +44,7 @@ const LogoutButton = styled.TouchableOpacity`
 
 const ButtonText = styled.Text`
   color: ${({ theme }: ThemedProps) => theme.colors.text};
+  font-family: ${({ theme }: ThemedProps) => theme.typography.bodyBold};
   font-weight: 700;
 `;
 

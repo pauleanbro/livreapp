@@ -5,7 +5,7 @@ import { ThemedProps } from "./types";
 export const Title = styled.Text`
   ${({ theme }: ThemedProps) => css`
     color: ${theme.colors.text};
-    font-family: ${theme.typography.title};
+    font-family: ${theme.typography.bodyBold};
     font-size: 24px;
   `}
 `;

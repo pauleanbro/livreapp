@@ -1,4 +1,5 @@
 import { axiosAdapter, AxiosAdapter } from "@/utils/axiosAdapter";
+import { handleApiError } from "@/utils/handleApiError";
 
 export type LoginPayload = {
   username: string;
@@ -35,11 +36,8 @@ export class AuthServiceImpl implements AuthService {
       this.http.setToken(response.access_token);
       return response;
     } catch (error: any) {
-      console.error("[AuthService] Login error:", {
-        message: error?.message,
-        status: error?.response?.status,
-        data: error?.response?.data,
-      });
+      // Use centralized handler for user feedback and dev logging
+      handleApiError(error, { logLabel: "[AuthService] Login error", variant: "destructive" });
       throw error;
     }
   };

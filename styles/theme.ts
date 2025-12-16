@@ -1,12 +1,12 @@
 export const theme = {
   colors: {
-    background: "#000",
-    surface: "#0f0f0f",
-    primary: "#7c3aed",
-    secondary: "#22d3ee",
-    text: "#f5f5f5",
-    muted: "#9ca3af",
-    border: "#1f2937",
+    background: "#093233",
+    surface: "#FFFFFF",
+    primary: "#44EAA2",
+    secondary: "#027E68",
+    text: "#064D4C",
+    muted: "#3B7476",
+    border: "#C7E4DD",
   },
   spacing: (factor: number) => factor * 8,
   radius: {
@@ -15,8 +15,11 @@ export const theme = {
     lg: 20,
   },
   typography: {
-    title: "KallistoBold",
-    body: "SpaceMono",
+    // Map to loaded font families (via @expo-google-fonts)
+    heading: "Inter_700Bold",
+    headingRegular: "Inter_400Regular",
+    body: "DMSans_400Regular",
+    bodyBold: "DMSans_700Bold",
   },
 };
 

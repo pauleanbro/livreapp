@@ -1,5 +1,6 @@
 import { envs, IEnvs } from "@/constants/envs";
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { handleApiError } from "@/utils/handleApiError";
 
 export interface AxiosAdapter {
   get<T = any>(url: string, config?: any): Promise<T>;
@@ -65,14 +66,23 @@ class AxiosAdapterImpl implements AxiosAdapter {
     return [
       (response: AxiosResponse) => response,
       (error: any) => {
-        console.error("[HTTP Error]", {
-          method: error?.config?.method,
-          baseURL: error?.config?.baseURL,
-          url: error?.config?.url,
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
+        if (typeof __DEV__ !== "undefined" ? __DEV__ : process.env.NODE_ENV !== "production") {
+          console.error("[HTTP Error]", {
+            method: error?.config?.method,
+            baseURL: error?.config?.baseURL,
+            url: error?.config?.url,
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+          });
+        }
+
+        try {
+          handleApiError(error, { variant: "destructive" });
+        } catch (e) {
+          console.warn("[handleApiError] failed", e);
+        }
+
         return Promise.reject(error);
       },
     ] as const;

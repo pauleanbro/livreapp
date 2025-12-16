@@ -9,7 +9,7 @@ void SplashScreen.preventAutoHideAsync();
 export default function PreLoadApp() {
   return (
     <AnimatedSplashScreen>
-      <Redirect href="/auth" />
+      <Redirect href="/home" />
     </AnimatedSplashScreen>
   );
 }
