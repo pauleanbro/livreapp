@@ -14,12 +14,12 @@ import {
     PrimaryButton,
     Spacer,
 } from "@/components/ui/controls";
-import { digitOnly } from "./shared/utils";
+import { digitOnly } from "@/shared/onboarding/utils";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import { useOnboardingStore } from "@/stores/onboardingStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";
-import styled from "styled-components/native";
+import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
+import { styled } from "styled-components/native";
 
 type FormValues = { emailOtp: string };
 

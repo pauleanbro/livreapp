@@ -1,10 +1,10 @@
 import { useRouter } from "expo-router";
 import React from "react";
-import styled from "styled-components/native";
+import { styled } from "styled-components/native";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import { useAuthStore } from "@/stores/authStore";
-import { Body, Content, Screen, ThemedProps, Title } from "@/styles/shared";
+import { Body, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
 
 export default function Dashboard() {
   const router = useRouter();

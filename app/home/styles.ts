@@ -1,7 +1,7 @@
 import { ImageBackground } from "react-native";
-import styled from "styled-components/native";
+import { styled } from "styled-components/native";
 
-import { ThemedProps } from "@/styles/shared";
+import { ThemedProps } from "@/components/ui/shared";
 
 export const Background = styled(ImageBackground)`
   flex: 1;

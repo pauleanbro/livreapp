@@ -1,5 +1,5 @@
-import { ThemedProps } from "@/styles/shared";
-import styled from "styled-components/native";
+import { ThemedProps } from "@/components/ui/shared";
+import { styled } from "styled-components/native";
 
 export const BackgroundView = styled.View`
   flex: 1;

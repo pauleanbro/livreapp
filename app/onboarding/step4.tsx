@@ -12,18 +12,29 @@ import {
     SecondaryButton,
     Spacer,
 } from "@/components/ui/controls";
-import { birthdateToISO, digitOnly } from "./shared/utils";
+import { birthdateToISO, digitOnly } from "@/shared/onboarding/utils";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import { BioStatus } from "@/services/onboarding.service";
 import { useOnboardingStore } from "@/stores/onboardingStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";
-import styled from "styled-components/native";
+import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
+import { styled } from "styled-components/native";
 
 export default function OnboardingStep4() {
   const router = useRouter();
   const onboardingService = useServices(EServices.OnboardingService);
   const store = useOnboardingStore();
+  const {
+    birthdate,
+    companyVerified,
+    cpf,
+    email,
+    fullName,
+    identityVerified,
+    mothersName,
+    setIdentity,
+    transactionId,
+  } = store;
 
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,54 +42,78 @@ export default function OnboardingStep4() {
   const [bioLoading, setBioLoading] = useState(false);
   const [bioStatus, setBioStatus] = useState<string | null>(null);
 
-  const createMockBio = async () => {
-    if (store.transactionId || loading) return;
-    setBioLoading(true);
-    setError(null);
-    setStatusMessage("Gerando link de biometria (mock)...");
-    try {
-      const bioLink = await onboardingService.createBioLink({
-        document: digitOnly(store.cpf),
-        name: store.fullName,
-        birthdate: birthdateToISO(store.birthdate),
-        email: store.email,
-        mothersName: store.mothersName,
-        verifiedEmail: true,
-      });
-      const status = await onboardingService.fetchBioStatus(bioLink.transactionId);
-      setBioStatus(status.status);
-      store.setIdentity({
-        transactionId: bioLink.transactionId,
-        identityVerified: status.status === BioStatus.Done ? bioLink.transactionId : undefined,
-      });
-      if (status.status === BioStatus.Done) {
-        setStatusMessage("Biometria confirmada.");
-        router.push("/onboarding/step5");
-      } else {
-        setStatusMessage("Biometria pendente. Clique em 'Já fiz a biometria' para atualizar.");
-      }
-    } catch {
-      setError("Não foi possível iniciar a biometria mock.");
-    } finally {
-      setBioLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (!store.fullName || !store.cpf || !store.email) {
+    if (!fullName || !cpf || !email) {
       router.replace("/onboarding");
       return;
     }
-    if (!store.companyVerified) {
+    if (!companyVerified) {
       router.replace("/onboarding/step3");
       return;
     }
-    if (store.identityVerified) {
+    if (identityVerified) {
       setStatusMessage("Biometria já confirmada.");
       return;
     }
-    void createMockBio();
-  }, [store.companyVerified, store.identityVerified, router]);
+    if (transactionId || loading) return;
+
+    let isCancelled = false;
+
+    const initiateMockBio = async () => {
+      setBioLoading(true);
+      setError(null);
+      setStatusMessage("Gerando link de biometria (mock)...");
+      try {
+        const bioLink = await onboardingService.createBioLink({
+          document: digitOnly(cpf),
+          name: fullName,
+          birthdate: birthdateToISO(birthdate),
+          email,
+          mothersName,
+          verifiedEmail: true,
+        });
+        const status = await onboardingService.fetchBioStatus(bioLink.transactionId);
+        if (isCancelled) return;
+        setBioStatus(status.status);
+        setIdentity({
+          transactionId: bioLink.transactionId,
+          identityVerified: status.status === BioStatus.Done ? bioLink.transactionId : undefined,
+        });
+        if (status.status === BioStatus.Done) {
+          setStatusMessage("Biometria confirmada.");
+          router.push("/onboarding/step5");
+        } else {
+          setStatusMessage("Biometria pendente. Clique em 'Já fiz a biometria' para atualizar.");
+        }
+      } catch {
+        if (isCancelled) return;
+        setError("Não foi possível iniciar a biometria mock.");
+      } finally {
+        if (!isCancelled) {
+          setBioLoading(false);
+        }
+      }
+    };
+
+    void initiateMockBio();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    birthdate,
+    companyVerified,
+    cpf,
+    email,
+    fullName,
+    identityVerified,
+    loading,
+    mothersName,
+    onboardingService,
+    router,
+    setIdentity,
+    transactionId,
+  ]);
 
   const handleManualCheck = async () => {
     if (!store.transactionId) return;

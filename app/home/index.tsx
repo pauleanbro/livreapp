@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 
 import { PrimaryButton, ButtonText as SharedButtonText } from "@/components/ui/controls";
-import { Screen } from "@/styles/shared";
+import { Screen } from "@/components/ui/shared";
 import { Background, Card, CardImage, Container, Inner, Logo, OutlineButton, Title } from "./styles";
 
 export default function Home() {

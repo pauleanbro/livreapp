@@ -1,3 +1,3 @@
-import { AppTheme } from "../theme";
+import { AppTheme } from "@/styles/theme";
 
 export type ThemedProps = { theme: AppTheme };

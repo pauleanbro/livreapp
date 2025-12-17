@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/controls";
 import { EServices, useServices } from "@/hooks/useServices";
 import { useAuthStore } from "@/stores/authStore";
-import { Screen } from "@/styles/shared";
+import { Screen } from "@/components/ui/shared";
 
 type LoginFormProps = {
   username: string;

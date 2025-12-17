@@ -4,8 +4,8 @@ import { ScrollView } from "react-native";
 
 import { ButtonText, GhostButton, GhostText, PrimaryButton, Spacer } from "@/components/ui/controls";
 
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";
-import styled from "styled-components/native";
+import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
+import { styled } from "styled-components/native";
 
 export default function OnboardingStep6() {
   const router = useRouter();

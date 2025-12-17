@@ -1,8 +1,8 @@
 import React from "react";
 import { StyleProp, TextInputProps, TextStyle, ViewStyle } from "react-native";
-import styled from "styled-components/native";
+import { styled } from "styled-components/native";
 
-import { ThemedProps } from "@/styles/shared";
+import { ThemedProps } from "@/components/ui/shared";
 
 const StyledInput = styled.TextInput<TextInputProps & ThemedProps>`
   border-width: 1px;

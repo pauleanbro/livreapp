@@ -22,13 +22,13 @@ import {
     formatDateFromDate,
     formatPhone,
     isValidDate,
-} from "./shared/utils";
+} from "@/shared/onboarding/utils";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import { PersonalData } from "@/services/onboarding.service";
 import { useOnboardingStore } from "@/stores/onboardingStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";
-import styled from "styled-components/native";
+import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
+import { styled } from "styled-components/native";
 
 type FormValues = PersonalData;
 

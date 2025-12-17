@@ -17,8 +17,8 @@ import {
 import { EServices, useServices } from "@/hooks/useServices";
 import { FinalizeOnboardingPayload } from "@/services/onboarding.service";
 import { useOnboardingStore } from "@/stores/onboardingStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/styles/shared";
-import styled from "styled-components/native";
+import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
+import { styled } from "styled-components/native";
 
 export default function OnboardingStep5() {
   const router = useRouter();
