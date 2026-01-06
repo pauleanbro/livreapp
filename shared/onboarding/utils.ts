@@ -47,6 +47,32 @@ export const formatCPF = (value: string) => {
   return `${formatted[0]}.${formatted[1]}.${formatted[2]}-${formatted[3]}`;
 };
 
+export const formatCNPJ = (value: string) => {
+  const digits = digitOnly(value).slice(0, 14);
+  if (!digits) return "";
+  const part1 = digits.slice(0, 2);
+  const part2 = digits.slice(2, 5);
+  const part3 = digits.slice(5, 8);
+  const part4 = digits.slice(8, 12);
+  const part5 = digits.slice(12, 14);
+
+  let formatted = part1;
+  if (part2) {
+    formatted += `.${part2}`;
+  }
+  if (part3) {
+    formatted += `.${part3}`;
+  }
+  if (part4) {
+    formatted += `/${part4}`;
+  }
+  if (part5) {
+    formatted += `-${part5}`;
+  }
+
+  return formatted;
+};
+
 export const formatPhone = (value: string) => {
   const digits = digitOnly(value).slice(0, 11);
   if (digits.length <= 2) return digits;

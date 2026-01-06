@@ -73,6 +73,7 @@ class AxiosAdapterImpl implements AxiosAdapter {
             url: error?.config?.url,
             status: error.response?.status,
             data: error.response?.data,
+            dataJson: JSON.stringify(error.response?.data ?? null),
             message: error.message,
           });
         }

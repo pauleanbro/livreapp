@@ -1,10 +1,13 @@
+/* eslint-disable import/no-named-as-default */
 import React from "react";
-import { StyleProp, TextInputProps, TextStyle, ViewStyle } from "react-native";
-import { styled } from "styled-components/native";
+import { Platform, StyleProp, StyleSheet, TextInputProps, TextStyle, ViewStyle } from "react-native";
+import styled from "styled-components/native";
 
 import { ThemedProps } from "@/components/ui/shared";
 
-const StyledInput = styled.TextInput<TextInputProps & ThemedProps>`
+const StyledInput = styled.TextInput.attrs({
+  underlineColorAndroid: "transparent",
+})<TextInputProps & ThemedProps>`
   border-width: 1px;
   border-color: ${({ theme }: ThemedProps) => theme.colors.border};
   background-color: transparent;
@@ -26,13 +29,29 @@ export const Input: React.FC<InputProps> = ({ label, containerStyle, inputStyle,
     // default behavior for forms: no auto-capitalization and no autocorrect
     autoCapitalize: (props as any).autoCapitalize ?? "none",
     autoCorrect: (props as any).autoCorrect ?? false,
+    underlineColorAndroid: (props as any).underlineColorAndroid ?? "transparent",
     ...(props as TextInputProps),
   };
+  const flattenedInputStyle = inputStyle ? StyleSheet.flatten(inputStyle) : undefined;
+  const useAndroidReset =
+    Platform.OS === "android" &&
+    !!flattenedInputStyle &&
+    !!flattenedInputStyle.borderBottomWidth &&
+    !flattenedInputStyle.borderWidth;
+  const androidResetStyle = useAndroidReset
+    ? {
+        borderWidth: 0,
+        borderBottomWidth: 0,
+        paddingVertical: 0,
+        backgroundColor: "transparent",
+      }
+    : null;
+  const composedStyle = inputStyle ? [androidResetStyle, inputStyle] : androidResetStyle;
 
   return (
     <InputWrapper style={containerStyle}>
       {label ? <Label style={labelStyle}>{label}</Label> : null}
-      <StyledInput {...inputProps} style={inputStyle} placeholder={props.placeholder ?? ""} />
+      <StyledInput {...inputProps} style={composedStyle} placeholder={props.placeholder ?? ""} />
     </InputWrapper>
   );
 };
@@ -108,7 +127,9 @@ export const Checkbox: React.FC<{
 }> = ({ label, value = false, onValueChange, children, containerStyle, boxStyle, labelStyle }) => {
   if (children) {
     // compatibility: allow rendering raw checkbox text content like before
-    return <ToggleRow style={containerStyle}>{children}</ToggleRow>;
+    const normalizedContent =
+      typeof children === "string" ? <Label style={labelStyle}>{children}</Label> : children;
+    return <ToggleRow style={containerStyle}>{normalizedContent}</ToggleRow>;
   }
 
   return (

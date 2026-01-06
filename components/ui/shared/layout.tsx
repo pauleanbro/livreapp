@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styled } from "styled-components/native";
+import styled from "styled-components/native";
 
 import { ThemedProps } from "./types";
 

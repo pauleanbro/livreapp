@@ -1,11 +1,5 @@
 import { axiosAdapter, AxiosAdapter } from "@/utils/axiosAdapter";
 
-export enum BioStatus {
-  Pending = "Pending",
-  Done = "Done",
-  Failed = "Failed",
-}
-
 export type PersonalData = {
   fullName: string;
   cpf: string;
@@ -38,24 +32,54 @@ export type CompanyVerificationResponse = {
   state: string;
 };
 
-export type BioLinkPayload = {
-  document: string;
-  name: string;
-  birthdate: string; // YYYY-MM-DD
-  email: string;
-  mothersName: string;
-  verifiedEmail: boolean;
+type CompanyVerificationRawResponse = Record<string, unknown>;
+
+const toStringValue = (value: unknown): string | undefined => {
+  if (value == null) {
+    return undefined;
+  }
+  if (typeof value === "string" && value.trim().length) {
+    return value.trim();
+  }
+  if (typeof value === "number" || typeof value === "bigint") {
+    return String(value);
+  }
+  return undefined;
 };
 
-export type BioLinkResponse = {
-  transactionId: string;
-  biolinkUrl: string;
-  qrCodeUrl?: string;
+const pickFirstString = (data: CompanyVerificationRawResponse, keys: readonly string[]): string | undefined => {
+  for (const key of keys) {
+    const candidate = toStringValue(data[key]);
+    if (candidate) {
+      return candidate;
+    }
+  }
+  return undefined;
 };
 
-export type BioStatusResponse = {
-  transactionId: string;
-  status: BioStatus;
+const normalizeCompanyVerificationResponse = (payload: CompanyVerificationRawResponse): CompanyVerificationResponse => {
+  const nameKeys = [
+    "corporateName",
+    "razaoSocial",
+    "razao_social",
+    "nomeEmpresa",
+    "nome_empresa",
+    "nomeFantasia",
+    "nome_fantasia",
+    "nome",
+  ] as const;
+  const addressKeys = ["address", "endereco", "logradouro", "rua", "enderecoCompleto"] as const;
+  const cityKeys = ["city", "cidade", "municipio", "localidade"] as const;
+  const stateKeys = ["state", "uf", "estado"] as const;
+  const cepKeys = ["cep", "zip", "codigoPostal", "codigo_postal"] as const;
+
+  return {
+    corporateName: pickFirstString(payload, nameKeys) ?? "",
+    cep: pickFirstString(payload, cepKeys) ?? "",
+    address: pickFirstString(payload, addressKeys) ?? "",
+    city: pickFirstString(payload, cityKeys) ?? "",
+    state: pickFirstString(payload, stateKeys) ?? "",
+  };
 };
 
 export type FinalizeOnboardingPayload = {
@@ -86,8 +110,6 @@ export interface OnboardingService {
   verifyCompany(
     payload: CompanyVerificationPayload,
   ): Promise<CompanyVerificationResponse>;
-  createBioLink(payload: BioLinkPayload): Promise<BioLinkResponse>;
-  fetchBioStatus(transactionId: string): Promise<BioStatusResponse>;
   finalize(payload: FinalizeOnboardingPayload): Promise<void>;
 }
 
@@ -108,27 +130,11 @@ class OnboardingServiceImpl implements OnboardingService {
   async verifyCompany(
     payload: CompanyVerificationPayload,
   ): Promise<CompanyVerificationResponse> {
-    const response = await this.http.post<CompanyVerificationResponse>(
+    const response = await this.http.post<CompanyVerificationRawResponse>(
       "/onboarding/empresa-socio",
       payload,
     );
-    return response;
-  }
-
-  // ClearSale mocked for now
-  async createBioLink(_: BioLinkPayload): Promise<BioLinkResponse> {
-    return Promise.resolve({
-      transactionId: `mock-transaction-${Date.now()}`,
-      biolinkUrl: "https://livre.digital/biometria-mock",
-      qrCodeUrl: "https://via.placeholder.com/180?text=Biometria+Mock",
-    });
-  }
-
-  async fetchBioStatus(transactionId: string): Promise<BioStatusResponse> {
-    return Promise.resolve({
-      transactionId,
-      status: BioStatus.Done,
-    });
+    return normalizeCompanyVerificationResponse(response);
   }
 
   async finalize(payload: FinalizeOnboardingPayload) {

@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.livreapp"
+      "bundleIdentifier": "com.livreplataforma.livredigital",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Precisamos da câmera para realizar a verificação de biometria."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,8 +23,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
+      "permissions": ["CAMERA"],
+      "softwareKeyboardLayoutMode": "pan",
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.livreapp"
+      "package": "com.livreplataforma.livredigital"
     },
     "web": {
       "output": "static",

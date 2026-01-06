@@ -1,27 +1,44 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView } from "react-native";
 
 import {
-    ButtonText,
-    ErrorBanner,
-    ErrorText,
-    GhostButton,
-    GhostText,
-    InfoBanner,
-    Input,
-    PrimaryButton,
-    Spacer,
+  ErrorBanner,
+  ErrorText,
+  GhostButton,
+  GhostText,
+  InfoBanner,
 } from "@/components/ui/controls";
 import { digitOnly } from "@/shared/onboarding/utils";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import { useOnboardingStore } from "@/stores/onboardingStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
-import { styled } from "styled-components/native";
+import { Screen } from "@/components/ui/shared";
+import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { getStringAsync } from "expo-clipboard";
+import {
+  CtaButton,
+  CtaLabel,
+  FooterBar,
+  HeroBackButton,
+  InputBlock,
+  MainContent,
+  OnboardingHeader,
+  OnboardingTopRow,
+  HeaderDivider,
+  QuestionBlock,
+  QuestionHighlight,
+  QuestionLead,
+  QuestionRow,
+  QuestionSubtitle,
+  ContentPadding,
+  ScrollArea,
+} from "./styles";
+import { OTPInput } from "@/components/ui/otp";
 
 type FormValues = { emailOtp: string };
+const leafPattern = require("../../assets/images/leaf-pattern.png");
 
 export default function OnboardingStep2() {
   const router = useRouter();
@@ -32,9 +49,11 @@ export default function OnboardingStep2() {
   const [loading, setLoading] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
 
-  const { control, handleSubmit, formState } = useForm<FormValues>({
+  const { control, handleSubmit, formState, setValue, watch } = useForm<FormValues>({
     defaultValues: { emailOtp: store.emailOtp },
   });
+  const otpValue = watch("emailOtp");
+  const OTP_LENGTH = 6;
 
   useEffect(() => {
     if (!store.email) {
@@ -47,6 +66,23 @@ export default function OnboardingStep2() {
     const t = setTimeout(() => setResendSeconds((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [resendSeconds]);
+
+  useEffect(() => {
+    if (otpValue.length === OTP_LENGTH) return;
+    let isMounted = true;
+    const tryClipboard = async () => {
+      const clipboardText = await getStringAsync();
+      if (!isMounted) return;
+      const digits = digitOnly(clipboardText).slice(0, OTP_LENGTH);
+      if (digits.length === OTP_LENGTH && digits !== otpValue) {
+        setValue("emailOtp", digits);
+      }
+    };
+    void tryClipboard();
+    return () => {
+      isMounted = false;
+    };
+  }, [OTP_LENGTH, otpValue, setValue]);
 
   const onSubmit = async (data: FormValues) => {
     setError(null);
@@ -89,65 +125,70 @@ export default function OnboardingStep2() {
     }
   };
 
-  return (
-    <Screen>
-      <Content>
-        <ScrollView contentContainerStyle={{ paddingBottom: 24, gap: 12 }}>
-          <Header>
-            <Title>Confirmação de email</Title>
-            <Body>Etapa 2 de 6</Body>
-          </Header>
-          {statusMessage ? <InfoBanner>{statusMessage}</InfoBanner> : null}
-          {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-          <Card>
-            <Body>Enviamos um código para {store.email || "seu email"}.</Body>
-            <Spacer />
-            <Controller
-              control={control}
-              name="emailOtp"
-              rules={{
-                required: "Informe o código",
-                validate: (v) => /^\d{6}$/.test(v) || "Código deve ter 6 dígitos",
-              }}
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  placeholder="Código de 6 dígitos"
-                  keyboardType="numeric"
-                  value={value}
-                  onChangeText={(text) => onChange(digitOnly(text))}
-                  maxLength={6}
-                />
-              )}
-            />
-            {formState.errors.emailOtp ? <ErrorText>{formState.errors.emailOtp.message}</ErrorText> : null}
+  const questionLead = `${store.fullName?.split(/\s+/)[0] || "Certo"},`;
 
-            <Row>
-              <GhostButton onPress={() => router.replace("/onboarding")}>
-                <GhostText>Voltar</GhostText>
+  return (
+    <Screen style={{ backgroundColor: "#F7FAF8" }}>
+      <StatusBar style="dark" />
+      <MainContent>
+        <ScrollArea>
+          <ContentPadding>
+            <OnboardingHeader>
+              <OnboardingTopRow>
+                <HeroBackButton onPress={() => router.replace("/onboarding")}>
+                  <Ionicons name="arrow-back" size={20} color="#0b2f2d" />
+                </HeroBackButton>
+              </OnboardingTopRow>
+              <HeaderDivider />
+            </OnboardingHeader>
+            {statusMessage ? <InfoBanner>{statusMessage}</InfoBanner> : null}
+            {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+            <QuestionBlock>
+              <QuestionRow>
+                <QuestionLead>{questionLead}</QuestionLead>
+                <QuestionHighlight>confirme o código</QuestionHighlight>
+              </QuestionRow>
+              <QuestionSubtitle>Enviamos para {store.email || "seu e-mail"}.</QuestionSubtitle>
+            </QuestionBlock>
+            <InputBlock>
+              <Controller
+                control={control}
+                name="emailOtp"
+                rules={{
+                  required: "Informe o código",
+                  validate: (v) => /^\d{6}$/.test(v) || "Código deve ter 6 dígitos",
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <OTPInput
+                    value={value}
+                    onChange={(text) => onChange(digitOnly(text))}
+                    length={6}
+                    containerStyle={{ marginTop: 8 }}
+                    cellStyle={{ borderColor: "#DCEDE7" }}
+                  />
+                )}
+              />
+              {formState.errors.emailOtp ? <ErrorText>{formState.errors.emailOtp.message}</ErrorText> : null}
+              <GhostButton
+                disabled={resendSeconds > 0 || loading}
+                onPress={handleResend}
+                style={{ marginTop: 12 }}
+              >
+                <GhostText>
+                  {resendSeconds > 0 ? `Reenviar em ${resendSeconds}s` : "Reenviar código"}
+                </GhostText>
               </GhostButton>
-              <PrimaryButton style={{ flex: 1 }} disabled={loading} onPress={handleSubmit(onSubmit)}>
-                <ButtonText>{loading ? "Validando..." : "Próximo"}</ButtonText>
-              </PrimaryButton>
-            </Row>
-            <GhostButton disabled={resendSeconds > 0 || loading} onPress={handleResend}>
-              <GhostText>
-                {resendSeconds > 0 ? `Reenviar em ${resendSeconds}s` : "Reenviar código"}
-              </GhostText>
-            </GhostButton>
-          </Card>
-        </ScrollView>
-      </Content>
+            </InputBlock>
+          </ContentPadding>
+        </ScrollArea>
+      </MainContent>
+
+      <FooterBar>
+        <CtaButton disabled={loading} onPress={handleSubmit(onSubmit)}>
+          <CtaLabel>{loading ? "validando..." : "próximo"}</CtaLabel>
+          <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+        </CtaButton>
+      </FooterBar>
     </Screen>
   );
 }
-
-const Header = styled.View`
-  gap: ${({ theme }: ThemedProps) => theme.spacing(0.5)}px;
-`;
-
-const Row = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;

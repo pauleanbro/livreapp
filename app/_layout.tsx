@@ -7,6 +7,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { setBackgroundColorAsync } from "expo-system-ui";
 import React from "react";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "styled-components/native";
 
@@ -26,10 +27,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider theme={theme}>
-        <Slot />
-        <StatusBar style="light" backgroundColor={theme.colors.background} />
-      </ThemeProvider>
+      <KeyboardProvider>
+        <ThemeProvider theme={theme}>
+          <Slot />
+          <StatusBar style="light" backgroundColor={theme.colors.background} />
+        </ThemeProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

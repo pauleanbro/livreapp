@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React from "react";
-import { styled } from "styled-components/native";
+import styled from "styled-components/native";
 
 import { EServices, useServices } from "@/hooks/useServices";
 import { useAuthStore } from "@/stores/authStore";

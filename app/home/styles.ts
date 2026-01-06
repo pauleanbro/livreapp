@@ -1,5 +1,5 @@
 import { ImageBackground } from "react-native";
-import { styled } from "styled-components/native";
+import styled from "styled-components/native";
 
 import { ThemedProps } from "@/components/ui/shared";
 
@@ -46,11 +46,15 @@ export const Inner = styled.View`
   padding: 25px;
 `;
 
-export const Title = styled.Text`
+export const Title = styled.Text.attrs({
+  lineBreakMode: "wordWrap",
+  lineBreakStrategyIOS: "none",
+  textBreakStrategy: "simple",
+})`
   color: #ffffff;
   font-size: 37px;
   font-family: ${({ theme }: ThemedProps) => theme.typography.bodyBold};
-  width: 80%;
+  width: 85%;
   margin-bottom: 20px;
 `;
 

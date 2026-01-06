@@ -1,48 +1,73 @@
 import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView } from "react-native";
 
-import { ButtonText, GhostButton, GhostText, PrimaryButton, Spacer } from "@/components/ui/controls";
-
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
-import { styled } from "styled-components/native";
+import { GhostButton, GhostText } from "@/components/ui/controls";
+import { Body, Screen } from "@/components/ui/shared";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  CtaButton,
+  CtaLabel,
+  FieldCard,
+  FooterBar,
+  HeaderDivider,
+  HeroBackButton,
+  MainContent,
+  OnboardingHeader,
+  OnboardingTopRow,
+  QuestionBlock,
+  QuestionHighlight,
+  QuestionLead,
+  QuestionRow,
+  QuestionSubtitle,
+  ContentPadding,
+  ScrollArea,
+} from "./styles";
 
 export default function OnboardingStep6() {
   const router = useRouter();
 
   return (
-    <Screen>
-      <Content>
-        <ScrollView contentContainerStyle={{ paddingBottom: 24, gap: 12 }}>
-          <Header>
-            <Title>Sucesso!</Title>
-            <Body>Etapa 6 de 6</Body>
-          </Header>
-          <Card>
-            <Body>Cadastro enviado. Entraremos em contato com as próximas etapas.</Body>
-            <Spacer />
-            <RowButtons>
+    <Screen style={{ backgroundColor: "#F7FAF8" }}>
+      <StatusBar style="dark" />
+      <MainContent>
+        <ScrollArea>
+          <ContentPadding>
+            <OnboardingHeader>
+              <OnboardingTopRow>
+                <HeroBackButton onPress={() => router.replace("/onboarding/step5")}>
+                  <Ionicons name="arrow-back" size={20} color="#0b2f2d" />
+                </HeroBackButton>
+              </OnboardingTopRow>
+              <HeaderDivider />
+            </OnboardingHeader>
+
+            <QuestionBlock>
+              <QuestionRow>
+                <QuestionLead>Pronto,</QuestionLead>
+                <QuestionHighlight>cadastro enviado</QuestionHighlight>
+              </QuestionRow>
+              <QuestionSubtitle>
+                Entraremos em contato com os próximos passos assim que sua análise for concluída.
+              </QuestionSubtitle>
+            </QuestionBlock>
+
+            <FieldCard>
+              <Body>Se quiser revisar algum detalhe, você pode voltar uma etapa antes de sair.</Body>
               <GhostButton onPress={() => router.replace("/onboarding/step5")}>
-                <GhostText>Voltar</GhostText>
+                <GhostText>Voltar e revisar</GhostText>
               </GhostButton>
-              <PrimaryButton onPress={() => router.replace("/auth")}>
-                <ButtonText>Voltar ao login</ButtonText>
-              </PrimaryButton>
-            </RowButtons>
-          </Card>
-        </ScrollView>
-      </Content>
+            </FieldCard>
+          </ContentPadding>
+        </ScrollArea>
+      </MainContent>
+
+      <FooterBar>
+        <CtaButton onPress={() => router.replace("/auth")}>
+          <CtaLabel>voltar ao login</CtaLabel>
+          <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+        </CtaButton>
+      </FooterBar>
     </Screen>
   );
 }
-
-const Header = styled.View`
-  gap: ${({ theme }: ThemedProps) => theme.spacing(0.5)}px;
-`;
-
-const RowButtons = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;

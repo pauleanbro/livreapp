@@ -1,32 +1,42 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView } from "react-native";
 
-import {
-    ButtonText,
-    Checkbox,
-    ErrorBanner,
-    ErrorText,
-    GhostButton,
-    GhostText,
-    InfoBanner,
-    Input,
-    PrimaryButton,
-    SecondaryButton,
-    Spacer,
-    ToggleRow,
-} from "@/components/ui/controls";
-import { digitOnly } from "@/shared/onboarding/utils";
+import { Checkbox, ErrorText, Input } from "@/components/ui/controls";
+import { digitOnly, formatCNPJ } from "@/shared/onboarding/utils";
 
+import { Screen } from "@/components/ui/shared";
 import { EServices, useServices } from "@/hooks/useServices";
 import {
-    CompanyVerificationPayload,
-    CompanyVerificationResponse,
+  CompanyVerificationPayload,
+  CompanyVerificationResponse,
 } from "@/services/onboarding.service";
 import { useOnboardingStore } from "@/stores/onboardingStore";
-import { Body, Card, Content, Screen, ThemedProps, Title } from "@/components/ui/shared";
-import { styled } from "styled-components/native";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  CtaButton,
+  CtaLabel,
+  FooterBar,
+  HeroBackButton,
+  InputBlock,
+  MainContent,
+  OnboardingHeader,
+  OnboardingTopRow,
+  HeaderDivider,
+  QuestionBlock,
+  QuestionHighlight,
+  QuestionLead,
+  QuestionRow,
+  QuestionSubtitle,
+  ContentPadding,
+  AdminCheckboxContainer,
+  ScrollArea,
+  ReadOnlyLabel,
+  ReadOnlyRow,
+  ReadOnlyValue,
+} from "./styles";
+import { StatusBar } from "expo-status-bar";
+import Snackbar from "react-native-snackbar";
 
 type FormValues = CompanyVerificationPayload;
 
@@ -34,169 +44,196 @@ export default function OnboardingStep3() {
   const router = useRouter();
   const onboardingService = useServices(EServices.OnboardingService);
   const store = useOnboardingStore();
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const loadingRef = useRef(false);
+  const [lastValidated, setLastValidated] = useState("");
 
-  React.useEffect(() => {
+  const { control, formState, watch } = useForm<FormValues>({
+    defaultValues: { cnpj: store.cnpj },
+  });
+
+  const cnpjValue = watch("cnpj", store.cnpj);
+  const inputStyle = {
+    backgroundColor: "#F7FBF9",
+    borderColor: "#DCEDE7",
+    borderWidth: 1,
+    borderBottomWidth: 1,
+    borderRadius: 16,
+    minHeight: 56,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginBottom: 8,
+    fontSize: 18,
+    color: "#064d4c",
+    textAlignVertical: "center" as const,
+  };
+  const placeholderTextColor = "rgba(6, 77, 76, 0.5)";
+  const rawName = (store.fullName || "").trim();
+  const firstName = rawName.split(/\s+/)[0] || "";
+  const questionLead = `${firstName || "Usuário"}, qual o`;
+
+  useEffect(() => {
     if (!store.emailVerified) {
       router.replace("/onboarding/step2");
     }
   }, [store.emailVerified, router]);
 
-  const { control, handleSubmit, formState } = useForm<FormValues>({
-    defaultValues: {
-      cnpj: store.cnpj,
-      cpf: store.cpf,
-      nome_socio: store.fullName,
-    },
-  });
-
-  const onVerify = async (data: FormValues) => {
-    setError(null);
-    setStatusMessage(null);
-    try {
-      setLoading(true);
-      const response: CompanyVerificationResponse = await onboardingService.verifyCompany({
-        cnpj: digitOnly(data.cnpj),
-        cpf: digitOnly(data.cpf),
-        nome_socio: data.nome_socio.trim(),
-      });
-      store.update({
-        cnpj: digitOnly(data.cnpj),
-        cpf: digitOnly(data.cpf),
-        fullName: data.nome_socio.trim(),
-      });
-      store.setCompanyData({ ...response, verified: true });
-      setStatusMessage("CNPJ verificado com sucesso.");
-    } catch {
-      setError("Falha ao verificar empresa. Confira os dados.");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const sanitized = digitOnly(cnpjValue);
+    if (sanitized.length !== 14 || sanitized === lastValidated || loadingRef.current) {
+      return;
     }
-  };
+    let isMounted = true;
+    const verifyCompany = async () => {
+      loadingRef.current = true;
+      setLoading(true);
+      try {
+        const response: CompanyVerificationResponse =
+          await onboardingService.verifyCompany({
+            cnpj: sanitized,
+            cpf: store.cpf,
+            nome_socio: store.fullName,
+          });
+        if (!isMounted) return;
+        setLastValidated(sanitized);
+        store.update({ cnpj: sanitized });
+        store.setCompanyData({ ...response, verified: true });
+        Snackbar.show({
+          text: "CNPJ verificado com sucesso.",
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: "#44EAA2",
+        });
+      } catch {
+        if (!isMounted) return;
+        Snackbar.show({
+          text: "Falha ao verificar empresa. Confira os dados.",
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: "#9b1c1c",
+        });
+      } finally {
+        loadingRef.current = false;
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    void verifyCompany();
+    return () => {
+      isMounted = false;
+    };
+  }, [cnpjValue, lastValidated, onboardingService, store]);
 
   const onNext = () => {
-    setError(null);
     if (!store.companyVerified) {
-      setError("Verifique o CNPJ antes de avançar.");
+      Snackbar.show({
+        text: "Verifique o CNPJ antes de avançar.",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "#9b1c1c",
+      });
       return;
     }
     if (!store.isAdmin) {
-      setError("Confirme que você é administrador da empresa.");
+      Snackbar.show({
+        text: "Confirme que você é administrador da empresa.",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "#9b1c1c",
+      });
       return;
     }
     router.push("/onboarding/step4");
   };
 
   return (
-    <Screen>
-      <Content>
-        <ScrollView contentContainerStyle={{ paddingBottom: 24, gap: 12 }}>
-          <Header>
-            <Title>Dados da empresa</Title>
-            <Body>Etapa 3 de 6</Body>
-          </Header>
-          {statusMessage ? <InfoBanner>{statusMessage}</InfoBanner> : null}
-          {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-          <Card>
-            <Controller
-              control={control}
-              name="cnpj"
-              rules={{
-                required: "Informe o CNPJ",
-                validate: (v) => digitOnly(v).length === 14 || "CNPJ deve ter 14 dígitos",
-              }}
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  placeholder="CNPJ"
-                  keyboardType="numeric"
-                  value={value}
-                  onChangeText={(text) => onChange(digitOnly(text))}
-                  maxLength={14}
-                />
-              )}
-            />
-            {formState.errors.cnpj ? <ErrorText>{formState.errors.cnpj.message}</ErrorText> : null}
+    <Screen style={{ backgroundColor: "#F7FAF8" }}>
+      <StatusBar style="dark" />
+      <MainContent>
+        <ScrollArea>
+          <ContentPadding>
+            <OnboardingHeader>
+              <OnboardingTopRow>
+                <HeroBackButton onPress={() => router.replace("/onboarding/step2")}>
+                  <Ionicons name="arrow-back" size={20} color="#0b2f2d" />
+                </HeroBackButton>
+              </OnboardingTopRow>
+              <HeaderDivider />
+            </OnboardingHeader>
 
-            <Controller
-              control={control}
-              name="cpf"
-              rules={{
-                required: "Informe o CPF",
-                validate: (v) => digitOnly(v).length === 11 || "CPF deve ter 11 dígitos",
-              }}
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  placeholder="CPF"
-                  keyboardType="numeric"
-                  value={value}
-                  onChangeText={(text) => onChange(digitOnly(text))}
-                  maxLength={11}
-                />
-              )}
-            />
-            {formState.errors.cpf ? <ErrorText>{formState.errors.cpf.message}</ErrorText> : null}
+            <QuestionBlock>
+              <QuestionRow>
+                <QuestionLead>{questionLead}</QuestionLead>
+                <QuestionHighlight>CNPJ</QuestionHighlight>
+                <QuestionLead>da sua empresa?</QuestionLead>
+              </QuestionRow>
+              <QuestionSubtitle>Confirme os dados da empresa.</QuestionSubtitle>
+            </QuestionBlock>
 
-            <Controller
-              control={control}
-              name="nome_socio"
-              rules={{ required: "Informe o nome completo" }}
-              render={({ field: { onChange, value } }) => (
-                <Input placeholder="Nome do sócio (seu nome completo)" value={value} onChangeText={onChange} />
-              )}
-            />
-            {formState.errors.nome_socio ? <ErrorText>{formState.errors.nome_socio.message}</ErrorText> : null}
+            <InputBlock>
+              <Controller
+                control={control}
+                name="cnpj"
+                rules={{
+                  required: "Informe o CNPJ",
+                  validate: (value) =>
+                    digitOnly(value).length === 14 || "CNPJ deve ter 14 dígitos",
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    placeholder="Ex: 12.345.678/0001-95"
+                    keyboardType="numeric"
+                    value={formatCNPJ(value)}
+                    onChangeText={(text) => onChange(formatCNPJ(text))}
+                    maxLength={18}
+                    inputStyle={inputStyle}
+                    placeholderTextColor={placeholderTextColor}
+                  />
+                )}
+              />
+              {formState.errors.cnpj ? (
+                <ErrorText>{formState.errors.cnpj.message}</ErrorText>
+              ) : null}
+            </InputBlock>
 
-            <SecondaryButton disabled={loading} onPress={handleSubmit(onVerify)}>
-              <ButtonText>{loading ? "Verificando..." : "Verificar CNPJ"}</ButtonText>
-            </SecondaryButton>
+            {store.corporateName || store.cep ? (
+              <InputBlock>
+                <ReadOnlyRow>
+                  <ReadOnlyLabel>Razão social</ReadOnlyLabel>
+                  <ReadOnlyValue>{store.corporateName || "-"}</ReadOnlyValue>
+                </ReadOnlyRow>
+                <ReadOnlyRow>
+                  <ReadOnlyLabel>CEP</ReadOnlyLabel>
+                  <ReadOnlyValue>{store.cep || "-"}</ReadOnlyValue>
+                </ReadOnlyRow>
+                <ReadOnlyRow>
+                  <ReadOnlyLabel>Endereço</ReadOnlyLabel>
+                  <ReadOnlyValue>{store.address || "-"}</ReadOnlyValue>
+                </ReadOnlyRow>
+                <ReadOnlyRow>
+                  <ReadOnlyLabel>Cidade / UF</ReadOnlyLabel>
+                  <ReadOnlyValue>
+                    {store.city || "-"} / {store.state || "-"}
+                  </ReadOnlyValue>
+                </ReadOnlyRow>
+                <AdminCheckboxContainer>
+                  <Checkbox
+                    label="Sou administrador da empresa"
+                    value={store.isAdmin}
+                    onValueChange={(value) => store.update({ isAdmin: value })}
+                    labelStyle={{ color: "#064D4C", lineHeight: 22, marginLeft: 8 }}
+                    containerStyle={{ alignItems: "center" }}
+                  />
+                </AdminCheckboxContainer>
+              </InputBlock>
+            ) : null}
+          </ContentPadding>
+        </ScrollArea>
+      </MainContent>
 
-            <Spacer />
-            <Input placeholder="Razão social" value={store.corporateName} editable={false} />
-            <Input placeholder="CEP" value={store.cep} editable={false} />
-            <Input placeholder="Endereço" value={store.address} editable={false} />
-            <Row>
-              <HalfInput placeholder="Cidade" value={store.city} editable={false} />
-              <HalfInput placeholder="UF" value={store.state} editable={false} />
-            </Row>
-            <Spacer />
-            <ToggleRow onPress={() => store.update({ isAdmin: !store.isAdmin })}>
-              <Checkbox>{store.isAdmin ? "☑" : "☐"}</Checkbox>
-              <Body>Sou administrador da empresa</Body>
-            </ToggleRow>
-            <Spacer />
-            <RowButtons>
-              <GhostButton onPress={() => router.replace("/onboarding/step2")}>
-                <GhostText>Voltar</GhostText>
-              </GhostButton>
-              <PrimaryButton style={{ flex: 1 }} disabled={loading} onPress={onNext}>
-                <ButtonText>Próximo</ButtonText>
-              </PrimaryButton>
-            </RowButtons>
-          </Card>
-        </ScrollView>
-      </Content>
+      <FooterBar>
+        <CtaButton disabled={loading} onPress={onNext}>
+          <CtaLabel>{loading ? "verificando..." : "próximo"}</CtaLabel>
+          <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+        </CtaButton>
+      </FooterBar>
     </Screen>
   );
 }
-
-const Header = styled.View`
-  gap: ${({ theme }: ThemedProps) => theme.spacing(0.5)}px;
-`;
-
-const Row = styled.View`
-  flex-direction: row;
-  gap: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;
-
-const HalfInput = styled(Input)`
-  flex: 1;
-`;
-
-const RowButtons = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }: ThemedProps) => theme.spacing(1)}px;
-`;
