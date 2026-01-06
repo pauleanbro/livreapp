@@ -1,16 +1,15 @@
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Platform } from "react-native";
 
 import { ErrorText, GhostButton, GhostText, InfoBanner, Input } from "@/components/ui/controls";
 import {
   digitOnly,
   formatBirthdate,
   formatCPF,
-  formatDateFromDate,
   formatPhone,
+  isBirthdateWithinRange,
+  isValidCPF,
   isValidDate,
 } from "@/shared/onboarding/utils";
 
@@ -22,8 +21,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   CtaButton,
   CtaLabel,
-  DateField,
-  DateText,
   FooterBar,
   HeroBackButton,
   InputBlock,
@@ -52,7 +49,6 @@ export default function OnboardingStep1() {
   const store = useOnboardingStore();
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [moduleIndex, setModuleIndex] = React.useState(0);
 
   const { control, handleSubmit, formState, trigger, getValues, setValue } = useForm<FormValues>({
@@ -180,7 +176,12 @@ export default function OnboardingStep1() {
     currentModule?.field === "cpf" ? "CPF" : currentModule?.title.toLowerCase() ?? "";
   const rawName = (store.fullName || getValues("fullName") || "").trim();
   const firstName = rawName.split(/\s+/)[0] || "";
-  const questionLead = moduleIndex === 0 ? "Qual o seu" : `${firstName || "Certo"}, qual o seu`;
+  const questionLead =
+    moduleIndex === 0
+      ? "Qual o seu"
+      : currentModule?.field === "birthdate"
+        ? `${firstName || "Certo"}, qual a sua`
+        : `${firstName || "Certo"}, qual o seu`;
   const handleDevBypass = () => {
     store.setPersonalData({
       fullName: "Paulo Emílio Godinho da Fonseca",
@@ -237,7 +238,7 @@ export default function OnboardingStep1() {
           name="cpf"
           rules={{
             required: "Informe o CPF",
-            validate: (val) => digitOnly(val).length === 11 || "CPF deve ter 11 dígitos",
+            validate: (val) => isValidCPF(val) || "CPF inválido",
           }}
           render={({ field: { onChange, value } }) => {
             const masked = formatCPF(value || "");
@@ -322,47 +323,27 @@ export default function OnboardingStep1() {
             validate: (val) =>
               (() => {
                 const masked = formatBirthdate(val || "");
-                return (masked.length === 10 && isValidDate(masked)) || "Data inválida (DD/MM/AAAA)";
+                if (!(masked.length === 10 && isValidDate(masked))) {
+                  return "Data inválida (DD/MM/AAAA)";
+                }
+                return (
+                  isBirthdateWithinRange(masked) ||
+                  "Você precisa ter mais de 18 anos"
+                );
               })(),
           }}
           render={({ field: { onChange, value } }) => {
             const masked = formatBirthdate(value || "");
-            const parsedDate = (() => {
-              const parts = masked.split("/");
-              if (parts.length === 3) {
-                const [d, m, y] = parts.map((p) => Number(p));
-                if (!Number.isNaN(d) && !Number.isNaN(m) && !Number.isNaN(y)) {
-                  const date = new Date(y, m - 1, d);
-                  if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) {
-                    return date;
-                  }
-                }
-              }
-              return new Date(1990, 0, 1);
-            })();
             return (
-              <>
-                <DateField onPress={() => setShowDatePicker(true)}>
-                  <DateText>{masked || "DD/MM/AAAA"}</DateText>
-                </DateField>
-                {showDatePicker ? (
-                  <DateTimePicker
-                    mode="date"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    value={parsedDate}
-                    maximumDate={new Date()}
-                    onChange={(event, selectedDate) => {
-                      if (Platform.OS === "android") {
-                        setShowDatePicker(false);
-                      }
-                      if (event.type === "dismissed") return;
-                      const picked = selectedDate ?? parsedDate;
-                      const formatted = formatDateFromDate(picked);
-                      onChange(formatted);
-                    }}
-                  />
-                ) : null}
-              </>
+              <Input
+                placeholder="DD/MM/AAAA"
+                keyboardType="numeric"
+                value={masked}
+                onChangeText={(text) => onChange(digitOnly(text))}
+                maxLength={10}
+                inputStyle={inputStyle}
+                placeholderTextColor={placeholderTextColor}
+              />
             );
           }}
         />

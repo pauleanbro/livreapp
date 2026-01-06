@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Checkbox, ErrorText, Input } from "@/components/ui/controls";
-import { digitOnly, formatCNPJ } from "@/shared/onboarding/utils";
+import { digitOnly, formatCNPJ, isValidCNPJ } from "@/shared/onboarding/utils";
 
 import { Screen } from "@/components/ui/shared";
 import { EServices, useServices } from "@/hooks/useServices";
@@ -80,7 +80,7 @@ export default function OnboardingStep3() {
 
   useEffect(() => {
     const sanitized = digitOnly(cnpjValue);
-    if (sanitized.length !== 14 || sanitized === lastValidated || loadingRef.current) {
+    if (!isValidCNPJ(sanitized) || sanitized === lastValidated || loadingRef.current) {
       return;
     }
     let isMounted = true;
@@ -173,8 +173,7 @@ export default function OnboardingStep3() {
                 name="cnpj"
                 rules={{
                   required: "Informe o CNPJ",
-                  validate: (value) =>
-                    digitOnly(value).length === 14 || "CNPJ deve ter 14 dígitos",
+                  validate: (value) => isValidCNPJ(value) || "CNPJ inválido",
                 }}
                 render={({ field: { onChange, value } }) => (
                   <Input
