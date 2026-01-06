@@ -184,7 +184,7 @@ export default function Auth() {
               <Bottom>
                 <Support>
                   <SupportText>Problemas para fazer login?</SupportText>
-                  <Link onPress={() => {}}>
+                  <Link onPress={() => router.push("/recovey")}>
                     <LinkText>Clique para recuperar seu acesso</LinkText>
                   </Link>
                 </Support>
